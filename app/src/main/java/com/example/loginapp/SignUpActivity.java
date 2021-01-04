@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 
 import static com.example.loginapp.R.id.signInButtonId;
 import static com.example.loginapp.R.id.signUpTextViewId;
@@ -48,22 +49,20 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         signInTextView.setOnClickListener(this);
 
 
-
-
     }
 
     @Override
     public void onClick(View v) {
 
-        switch(v.getId()){
+        switch (v.getId()) {
 
-            case R.id.signUpButtonId :
+            case R.id.signUpButtonId:
 
                 userRegister();
 
                 break;
 
-            case R.id.signInTextViewId :
+            case R.id.signInTextViewId:
 
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
@@ -80,15 +79,13 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
         //checking the validity of the Email
 
-        if (email.isEmpty())
-        {
+        if (email.isEmpty()) {
             signUpEmailEditText.setError("Enter an Email Address");
             signUpEmailEditText.requestFocus();
             return;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches())
-        {
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             signUpEmailEditText.setError("Enter a valid Email Address");
             signUpEmailEditText.requestFocus();
             return;
@@ -96,15 +93,13 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
         //checking the validity of the password
 
-        if (password.isEmpty())
-        {
+        if (password.isEmpty()) {
             signUpPasswordEditText.setError("Enter a password");
             signUpPasswordEditText.requestFocus();
             return;
         }
 
-        if (password.length() > 6)
-        {
+        if (password.length() > 6) {
             signUpPasswordEditText.setError("Minimum length of a password should be 6");
             signUpPasswordEditText.requestFocus();
             return;
@@ -115,13 +110,20 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
-                if (task.isSuccessful())
-                {
+
+                progressBar.setVisibility(View.GONE);
+
+                if (task.isSuccessful()) {
                     Toast.makeText(getApplicationContext(), "Register is successful", Toast.LENGTH_SHORT).show();
 
-                }
-                else {
-                    Toast.makeText(getApplicationContext(), "Register is not successful", Toast.LENGTH_SHORT).show();
+                } else {
+                    if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                        Toast.makeText(getApplicationContext(), "User is Already Registered", Toast.LENGTH_SHORT).show();
+                    } else {
+
+                        Toast.makeText(getApplicationContext(), "Error : " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
                 }
             }
         });
